@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: bone-fracture-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: CORS_ORIGINS
+        value: https://YOUR-STREAMLIT-APP.streamlit.app

@@ -1,0 +1,20 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      CORS_ORIGINS: http://localhost:8501
+
+  frontend:
+    image: python:3.11-slim
+    working_dir: /app
+    command: sh -c "pip install --no-cache-dir -r requirements.txt && streamlit run frontend/app.py --server.address 0.0.0.0"
+    ports:
+      - "8501:8501"
+    environment:
+      API_URL: http://backend:8000
+    volumes:
+      - .:/app
+    depends_on:
+      - backend

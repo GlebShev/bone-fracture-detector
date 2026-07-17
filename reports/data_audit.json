@@ -1,0 +1,121 @@
+{
+  "data_yaml": "data/bone-fracture-detect/data.yaml",
+  "dataset_root": "data/bone-fracture-detect",
+  "classes": [
+    "elbow positive",
+    "fingers positive",
+    "forearm fracture",
+    "humerus fracture",
+    "humerus",
+    "shoulder fracture",
+    "wrist positive"
+  ],
+  "splits": {
+    "train": {
+      "images": 3631,
+      "objects": 2088,
+      "class_counts": {
+        "elbow positive": 339,
+        "fingers positive": 531,
+        "forearm fracture": 316,
+        "humerus fracture": 3,
+        "humerus": 311,
+        "shoulder fracture": 360,
+        "wrist positive": 228
+      },
+      "objects_per_image": {
+        "0": 1827,
+        "1": 1529,
+        "2": 266,
+        "3": 9
+      },
+      "missing_labels": 0,
+      "empty_labels": 1827,
+      "invalid_label_rows": 0,
+      "annotation_rows": {
+        "box": 2088
+      },
+      "unreadable_images": 0,
+      "image_width": {
+        "min": 111,
+        "max": 2048
+      },
+      "image_height": {
+        "min": 134,
+        "max": 2048
+      }
+    },
+    "val": {
+      "images": 348,
+      "objects": 204,
+      "class_counts": {
+        "elbow positive": 29,
+        "fingers positive": 48,
+        "forearm fracture": 43,
+        "humerus fracture": 0,
+        "humerus": 36,
+        "shoulder fracture": 20,
+        "wrist positive": 28
+      },
+      "objects_per_image": {
+        "0": 175,
+        "1": 146,
+        "2": 24,
+        "3": 2,
+        "4": 1
+      },
+      "missing_labels": 0,
+      "empty_labels": 175,
+      "invalid_label_rows": 0,
+      "annotation_rows": {
+        "box": 204
+      },
+      "unreadable_images": 0,
+      "image_width": {
+        "min": 130,
+        "max": 1409
+      },
+      "image_height": {
+        "min": 152,
+        "max": 1355
+      }
+    },
+    "test": {
+      "images": 169,
+      "objects": 96,
+      "class_counts": {
+        "elbow positive": 17,
+        "fingers positive": 27,
+        "forearm fracture": 14,
+        "humerus fracture": 0,
+        "humerus": 15,
+        "shoulder fracture": 17,
+        "wrist positive": 6
+      },
+      "objects_per_image": {
+        "0": 86,
+        "1": 72,
+        "2": 9,
+        "3": 2
+      },
+      "missing_labels": 0,
+      "empty_labels": 86,
+      "invalid_label_rows": 0,
+      "annotation_rows": {
+        "box": 96
+      },
+      "unreadable_images": 0,
+      "image_width": {
+        "min": 119,
+        "max": 801
+      },
+      "image_height": {
+        "min": 160,
+        "max": 2048
+      }
+    }
+  },
+  "cross_split_duplicates": [],
+  "issues": [],
+  "passed": true
+}
