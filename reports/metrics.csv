@@ -1,0 +1,3 @@
+model,weights,split,map50,map50_95,precision,recall,inference_ms_per_image,size_mb,parameters,target_map50_reached
+fast,models/fast.pt,test,0.153559,0.042768,0.298496,0.197917,111.088054,5.189,2582347,False
+accurate,models/accurate.pt,test,0.148659,0.041134,0.260123,0.186785,338.655697,18.266,9413187,False

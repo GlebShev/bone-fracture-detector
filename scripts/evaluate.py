@@ -25,6 +25,14 @@ def scalar(value: Any) -> float:
     return round(float(value), 6)
 
 
+def portable_path(path: Path) -> str:
+    """Prefer a repository-relative path in committed reports."""
+    try:
+        return str(path.relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(path)
+
+
 def main() -> None:
     args = parse_args()
     data_yaml = args.data.resolve()
@@ -64,7 +72,7 @@ def main() -> None:
 
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "data_yaml": str(data_yaml),
+        "data_yaml": portable_path(data_yaml),
         "scoring_target": "mAP@0.5 >= 0.5",
         "models": records,
     }

@@ -1,9 +1,10 @@
 # Model weights
 
-Place Colab artifacts here using these exact names:
+Final Colab artifacts are committed using these exact names:
 
 - `fast.pt` — YOLO11n, 640 px;
 - `accurate.pt` — YOLO11s, 768 px.
 
-The API reports a model as unavailable until the corresponding file exists. Do not rename a
-generic COCO checkpoint to these names: the files must be fine-tuned on the fracture dataset.
+Both files are fine-tuned one-class (`fracture`) checkpoints, not renamed generic COCO
+weights. Their reproducible test metrics are stored in `reports/metrics.json` and
+`reports/metrics.csv`.

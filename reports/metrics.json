@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-07-17T19:08:50.645423+00:00",
+  "data_yaml": "data/bone-fracture-detect-one-class/data.yaml",
+  "scoring_target": "mAP@0.5 >= 0.5",
+  "models": [
+    {
+      "model": "fast",
+      "weights": "models/fast.pt",
+      "split": "test",
+      "map50": 0.153559,
+      "map50_95": 0.042768,
+      "precision": 0.298496,
+      "recall": 0.197917,
+      "inference_ms_per_image": 111.088054,
+      "size_mb": 5.189,
+      "parameters": 2582347,
+      "target_map50_reached": false
+    },
+    {
+      "model": "accurate",
+      "weights": "models/accurate.pt",
+      "split": "test",
+      "map50": 0.148659,
+      "map50_95": 0.041134,
+      "precision": 0.260123,
+      "recall": 0.186785,
+      "inference_ms_per_image": 338.655697,
+      "size_mb": 18.266,
+      "parameters": 9413187,
+      "target_map50_reached": false
+    }
+  ]
+}

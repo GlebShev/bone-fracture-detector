@@ -1,27 +1,15 @@
 {
-  "data_yaml": "data/bone-fracture-detect/data.yaml",
-  "dataset_root": "data/bone-fracture-detect",
+  "data_yaml": "data/bone-fracture-detect-one-class/data.yaml",
+  "dataset_root": "data/bone-fracture-detect-one-class",
   "classes": [
-    "elbow positive",
-    "fingers positive",
-    "forearm fracture",
-    "humerus fracture",
-    "humerus",
-    "shoulder fracture",
-    "wrist positive"
+    "fracture"
   ],
   "splits": {
     "train": {
       "images": 3631,
       "objects": 2088,
       "class_counts": {
-        "elbow positive": 339,
-        "fingers positive": 531,
-        "forearm fracture": 316,
-        "humerus fracture": 3,
-        "humerus": 311,
-        "shoulder fracture": 360,
-        "wrist positive": 228
+        "fracture": 2088
       },
       "objects_per_image": {
         "0": 1827,
@@ -49,13 +37,7 @@
       "images": 348,
       "objects": 204,
       "class_counts": {
-        "elbow positive": 29,
-        "fingers positive": 48,
-        "forearm fracture": 43,
-        "humerus fracture": 0,
-        "humerus": 36,
-        "shoulder fracture": 20,
-        "wrist positive": 28
+        "fracture": 204
       },
       "objects_per_image": {
         "0": 175,
@@ -84,13 +66,7 @@
       "images": 169,
       "objects": 96,
       "class_counts": {
-        "elbow positive": 17,
-        "fingers positive": 27,
-        "forearm fracture": 14,
-        "humerus fracture": 0,
-        "humerus": 15,
-        "shoulder fracture": 17,
-        "wrist positive": 6
+        "fracture": 96
       },
       "objects_per_image": {
         "0": 86,

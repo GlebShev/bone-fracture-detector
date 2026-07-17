@@ -17,7 +17,7 @@ Streamlit frontend → FastAPI backend → Fast / Accurate YOLO model
 
 | Критерий | Реализация |
 |---|---|
-| Тюнинг модели | Два обоснованных профиля, консервативные X-ray аугментации, автоматическая оценка `mAP@0.5` |
+| Тюнинг модели | Два обученных профиля, консервативные X-ray аугментации и честная test-оценка `mAP@0.5` |
 | Backend, 3 балла | FastAPI: `GET /health`, `GET /models`, `POST /predict`, Swagger `/docs`, валидация и HTTP-ошибки |
 | Frontend, 2 балла | Streamlit: загрузка снимка, результат, таблица детекций, latency, обработка ошибок |
 | Выбор двух моделей, 4 балла | Fast (YOLO11n/640) и Accurate (YOLO11s/768) |
@@ -26,14 +26,16 @@ Streamlit frontend → FastAPI backend → Fast / Accurate YOLO model
 | Деплой, 4 балла | Docker/Render для API и Streamlit Community Cloud для UI |
 
 Максимальная оценка за модельную часть по выданному ТЗ достигается при
-**`mAP@0.5 ≥ 0.5`**. Скрипт оценки ставит поле `target_map50_reached` автоматически;
-значения метрик не заполняются вручную.
+**`mAP@0.5 ≥ 0.5`**. На отложенном test-наборе порог не достигнут: Fast получил `0.154`,
+Accurate — `0.149`. Поэтому по текущему результату модельная часть соответствует 1 баллу,
+а не 4. Значения получены `scripts/evaluate.py` и не корректировались вручную.
 
 ## Данные
 
 Используется публичный Kaggle-датасет
 [Bone Fracture Detection: Computer Vision Project](https://www.kaggle.com/datasets/pkdarabi/bone-fracture-detection-computer-vision-project)
-(CC BY 4.0, DOI `10.13140/RG.2.2.14400.34569`). В нём семь классов:
+(CC BY 4.0, DOI `10.13140/RG.2.2.14400.34569`). Исходная разметка содержит семь
+анатомических классов:
 
 1. Elbow Positive
 2. Fingers Positive
@@ -48,10 +50,11 @@ Streamlit frontend → FastAPI backend → Fast / Accurate YOLO model
 ```bash
 python scripts/download_dataset.py
 python scripts/prepare_detection_dataset.py \
-  --source data/bone-fracture/BoneFractureYolo8 \
-  --output data/bone-fracture-detect
+  --source "data/bone-fracture/bone fracture detection.v4-v4.yolov8" \
+  --output data/bone-fracture-detect-one-class \
+  --single-class
 python scripts/audit_dataset.py \
-  --data data/bone-fracture-detect/data.yaml \
+  --data data/bone-fracture-detect-one-class/data.yaml \
   --output reports/data_audit.json
 ```
 
@@ -100,6 +103,22 @@ python scripts/audit_dataset.py \
 как `fracture`. Это решение принято до обучения по результатам аудита: класс
 `humerus fracture` представлен только 3 объектами в train и отсутствует в validation/test.
 Переход сохраняет все исходные bounding boxes и меняет только идентификатор класса.
+
+### Финальные test-метрики
+
+| Model | mAP@0.5 | mAP@0.5:0.95 | Precision | Recall | CPU inference | Size |
+|---|---:|---:|---:|---:|---:|---:|
+| Fast | 0.154 | 0.043 | 0.298 | 0.198 | 111.1 ms | 5.19 MB |
+| Accurate | 0.149 | 0.041 | 0.260 | 0.187 | 338.7 ms | 18.27 MB |
+
+Fast оказался не только примерно втрое быстрее, но и немного лучше на отложенном test.
+Увеличение модели и входного разрешения не дало улучшения качества — это важный
+отрицательный результат тюнинга, вероятно связанный с малым числом размеченных объектов,
+неоднозначностью слабоконтрастных областей и domain shift внутри выборки.
+
+![Сравнение предсказаний Fast](reports/figures/fast_test_predictions.jpg)
+
+![Сравнение предсказаний Accurate](reports/figures/accurate_test_predictions.jpg)
 
 Те же операции доступны из CLI на GPU-машине:
 
