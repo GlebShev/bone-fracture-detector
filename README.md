@@ -13,6 +13,15 @@ Streamlit frontend → FastAPI backend → Fast / Accurate YOLO model
 > **Важно:** приложение является учебной демонстрацией. Оно не предназначено для
 > медицинской диагностики и не заменяет заключение врача-рентгенолога.
 
+## Публичная демонстрация
+
+- **Приложение:** <https://jcvh3mrbarmvekrnoybn6d.streamlit.app/>
+- **Backend healthcheck:** <https://bone-fracture-detector-xpw8.onrender.com/health>
+- **Swagger API:** <https://bone-fracture-detector-xpw8.onrender.com/docs>
+
+Backend размещён на бесплатном Render и засыпает при бездействии. Первый запрос после
+паузы может запускаться 50 секунд или дольше; последующие запросы выполняются быстрее.
+
 ## Соответствие критериям проекта
 
 | Критерий | Реализация |
@@ -200,6 +209,8 @@ pytest --cov=fracture_detector --cov=backend
 Dockerfile использует CPU-only PyTorch и отдельный `requirements-api.txt`: это исключает
 ненужные CUDA-библиотеки из образа бесплатного CPU-сервера Render.
 
+Текущий публичный сервис: <https://bone-fracture-detector-xpw8.onrender.com>.
+
 ### Frontend на Streamlit Community Cloud
 
 1. Создайте приложение из этого GitHub-репозитория.
@@ -211,6 +222,8 @@ API_URL = "https://YOUR-RENDER-SERVICE.onrender.com"
 ```
 
 4. Проверьте Fast и Accurate на одном и том же снимке в режиме инкогнито.
+
+Текущее публичное приложение: <https://jcvh3mrbarmvekrnoybn6d.streamlit.app/>.
 
 Для локальной проверки контейнеров можно использовать `docker compose up --build`.
 

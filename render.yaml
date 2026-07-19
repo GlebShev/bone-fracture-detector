@@ -7,4 +7,4 @@ services:
     healthCheckPath: /health
     envVars:
       - key: CORS_ORIGINS
-        value: https://YOUR-STREAMLIT-APP.streamlit.app
+        value: https://jcvh3mrbarmvekrnoybn6d.streamlit.app
