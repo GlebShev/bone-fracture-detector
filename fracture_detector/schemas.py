@@ -31,6 +31,7 @@ class Detection(BaseModel):
 
 class PredictionResponse(BaseModel):
     model_name: str
+    sensitivity_mode: bool
     latency_ms: float
     image_width: int
     image_height: int

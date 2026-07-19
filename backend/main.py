@@ -64,6 +64,7 @@ def create_app(
         ],
         model_name: Annotated[str, Form()] = "fast",
         confidence: Annotated[float, Form()] = 0.25,
+        sensitivity_mode: Annotated[bool, Form()] = True,
     ) -> PredictionResponse:
         if file.content_type not in {"image/jpeg", "image/png", "image/webp"}:
             raise HTTPException(status_code=415, detail="Неподдерживаемый тип файла.")
@@ -79,6 +80,7 @@ def create_app(
                 image,
                 model_name,
                 confidence,
+                sensitivity_mode,
             )
         except InvalidImageError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc

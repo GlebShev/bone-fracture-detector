@@ -14,6 +14,7 @@ class ModelSpec:
     description: str
     weights_path: Path
     image_size: int
+    sliced_fallback: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,6 +45,7 @@ class Settings:
                     description="Компактная YOLO11n, 640 px: минимальная задержка.",
                     weights_path=fast_path,
                     image_size=640,
+                    sliced_fallback=True,
                 ),
                 ModelSpec(
                     id="accurate",

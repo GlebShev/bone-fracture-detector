@@ -94,6 +94,17 @@ with st.sidebar:
         step=0.05,
         help="Понижение порога увеличивает число находок и риск false positive.",
     )
+    sensitivity_mode = st.checkbox(
+        "Повышенная чувствительность",
+        value=True,
+        disabled=model_name != "fast",
+        help=(
+            "Если обычный Fast-проход пуст, модель проверяет два перекрывающихся "
+            "фрагмента. Это уменьшает число пропусков, но увеличивает риск false positive."
+        ),
+    )
+    if sensitivity_mode and model_name == "fast":
+        st.caption("Второй проход может работать заметно дольше и чаще ошибаться.")
     st.divider()
     st.markdown(f"Backend: `{api_url}`")
 
@@ -122,7 +133,11 @@ if uploaded_file is not None:
                             uploaded_file.type or "image/jpeg",
                         )
                     },
-                    data={"model_name": model_name, "confidence": confidence},
+                    data={
+                        "model_name": model_name,
+                        "confidence": confidence,
+                        "sensitivity_mode": sensitivity_mode and model_name == "fast",
+                    },
                     timeout=(
                         PREDICT_CONNECT_TIMEOUT_SECONDS,
                         PREDICT_READ_TIMEOUT_SECONDS,

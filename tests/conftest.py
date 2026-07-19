@@ -16,7 +16,12 @@ from fracture_detector.model_manager import ModelManager
 
 
 class FakeDetector:
-    def predict(self, image: Image.Image, confidence: float) -> list[RawDetection]:
+    def predict(
+        self,
+        image: Image.Image,
+        confidence: float,
+        sensitivity_mode: bool = False,
+    ) -> list[RawDetection]:
         if confidence > 0.9:
             return []
         return [
@@ -46,7 +51,14 @@ def app_factory(tmp_path: Path) -> Callable[..., FastAPI]:
             fast_weights.touch()
             accurate_weights.touch()
         specs = (
-            ModelSpec("fast", "Fast", "fast model", fast_weights, 640),
+            ModelSpec(
+                "fast",
+                "Fast",
+                "fast model",
+                fast_weights,
+                640,
+                sliced_fallback=True,
+            ),
             ModelSpec("accurate", "Accurate", "accurate model", accurate_weights, 768),
         )
         settings = Settings(model_specs=specs, max_upload_bytes=1024 * 1024)

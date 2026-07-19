@@ -16,7 +16,11 @@ DetectorFactory = Callable[[ModelSpec], Detector]
 
 
 def _default_factory(spec: ModelSpec) -> Detector:
-    return UltralyticsDetector(spec.weights_path, spec.image_size)
+    return UltralyticsDetector(
+        spec.weights_path,
+        spec.image_size,
+        sliced_fallback=spec.sliced_fallback,
+    )
 
 
 class ModelManager:
@@ -77,14 +81,22 @@ class ModelManager:
         image: Image.Image,
         model_name: str,
         confidence: float,
+        sensitivity_mode: bool = False,
     ) -> PredictionResponse:
         if not 0.05 <= confidence <= 0.95:
             raise ValueError("confidence должен находиться в диапазоне [0.05, 0.95].")
 
         model = self._get_model(model_name)
+        effective_sensitivity_mode = (
+            sensitivity_mode and self._specs[model_name].sliced_fallback
+        )
         with self._inference_locks[model_name]:
             started = time.perf_counter()
-            raw_detections = model.predict(image, confidence)
+            raw_detections = model.predict(
+                image,
+                confidence,
+                effective_sensitivity_mode,
+            )
             latency_ms = (time.perf_counter() - started) * 1000
 
         annotated = annotate_image(image, raw_detections)
@@ -99,6 +111,7 @@ class ModelManager:
         ]
         return PredictionResponse(
             model_name=model_name,
+            sensitivity_mode=effective_sensitivity_mode,
             latency_ms=round(latency_ms, 2),
             image_width=image.width,
             image_height=image.height,

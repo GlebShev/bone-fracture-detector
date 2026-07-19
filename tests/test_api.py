@@ -31,6 +31,7 @@ def test_predict_returns_detection_and_annotated_png(
     assert response.status_code == 200
     body = response.json()
     assert body["model_name"] == "accurate"
+    assert body["sensitivity_mode"] is False
     assert body["detection_count"] == 1
     assert body["detections"][0]["class_name"] == "forearm fracture"
     assert body["detections"][0]["confidence"] == 0.91
@@ -49,7 +50,9 @@ def test_high_threshold_can_return_empty_result(
         data={"model_name": "fast", "confidence": "0.95"},
     )
     assert response.status_code == 200
-    assert response.json()["detection_count"] == 0
+    body = response.json()
+    assert body["detection_count"] == 0
+    assert body["sensitivity_mode"] is True
 
 
 def test_rejects_invalid_payload(client: TestClient) -> None:
