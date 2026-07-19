@@ -16,6 +16,11 @@ st.set_page_config(
     layout="wide",
 )
 
+MODELS_CONNECT_TIMEOUT_SECONDS = 10
+MODELS_READ_TIMEOUT_SECONDS = 90
+PREDICT_CONNECT_TIMEOUT_SECONDS = 10
+PREDICT_READ_TIMEOUT_SECONDS = 300
+
 
 def get_api_url() -> str:
     try:
@@ -27,7 +32,10 @@ def get_api_url() -> str:
 
 @st.cache_data(ttl=30, show_spinner=False)
 def fetch_models(api_url: str) -> list[dict[str, Any]]:
-    response = requests.get(f"{api_url}/models", timeout=10)
+    response = requests.get(
+        f"{api_url}/models",
+        timeout=(MODELS_CONNECT_TIMEOUT_SECONDS, MODELS_READ_TIMEOUT_SECONDS),
+    )
     response.raise_for_status()
     return response.json()["models"]
 
@@ -46,7 +54,8 @@ st.title("Детекция переломов на рентгеновских с
 st.caption("Учебный проект. Результат модели не является диагнозом и не заменяет врача.")
 
 try:
-    model_options = fetch_models(api_url)
+    with st.spinner("Подключаемся к backend…"):
+        model_options = fetch_models(api_url)
 except requests.RequestException:
     model_options = [
         {
@@ -114,7 +123,10 @@ if uploaded_file is not None:
                         )
                     },
                     data={"model_name": model_name, "confidence": confidence},
-                    timeout=120,
+                    timeout=(
+                        PREDICT_CONNECT_TIMEOUT_SECONDS,
+                        PREDICT_READ_TIMEOUT_SECONDS,
+                    ),
                 )
             except requests.RequestException as exc:
                 st.error(f"Не удалось связаться с backend: {exc}")
