@@ -27,7 +27,8 @@ class UltralyticsDetector:
             from ultralytics import YOLO
         except ImportError as exc:  # pragma: no cover - exercised only in ML runtime
             raise RuntimeError(
-                "Ultralytics is not installed. Install requirements-ml.txt."
+                "Ultralytics could not be imported. Install requirements-ml.txt "
+                f"and verify native OpenCV dependencies. Original error: {exc}"
             ) from exc
 
         self._model = YOLO(str(weights_path))

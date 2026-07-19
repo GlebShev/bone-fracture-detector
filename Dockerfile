@@ -8,6 +8,11 @@ WORKDIR /app
 
 COPY requirements-api.txt ./
 
+# OpenCV (imported by Ultralytics) needs these shared libraries in slim images.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Render's free service is CPU-only. Installing PyTorch from its CPU index avoids
 # several gigabytes of unused CUDA libraries and keeps the image deployable.
 RUN pip install --no-cache-dir \
