@@ -1,7 +1,9 @@
-.PHONY: install install-ml test lint api ui prepare audit train-fast train-accurate evaluate
+.PHONY: install install-ml test lint api ui download prepare audit train-fast train-accurate evaluate
 
 PYTHON ?= python3
-DATA_YAML ?= data/bone-fracture-detect/data.yaml
+SOURCE_DATASET ?= data/bone-fracture/bone fracture detection.v4-v4.yolov8
+DATA_ROOT ?= data/bone-fracture-detect-one-class
+DATA_YAML ?= $(DATA_ROOT)/data.yaml
 
 install:
 	$(PYTHON) -m pip install -r requirements-dev.txt
@@ -21,10 +23,14 @@ api:
 ui:
 	$(PYTHON) -m streamlit run frontend/app.py
 
+download:
+	$(PYTHON) scripts/download_dataset.py
+
 prepare:
 	$(PYTHON) scripts/prepare_detection_dataset.py \
-		--source data/bone-fracture/BoneFractureYolo8 \
-		--output data/bone-fracture-detect
+		--source "$(SOURCE_DATASET)" \
+		--output "$(DATA_ROOT)" \
+		--single-class
 
 audit:
 	$(PYTHON) scripts/audit_dataset.py --data $(DATA_YAML) --output reports/data_audit.json

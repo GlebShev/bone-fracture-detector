@@ -87,9 +87,7 @@ class ModelManager:
             raise ValueError("confidence должен находиться в диапазоне [0.05, 0.95].")
 
         model = self._get_model(model_name)
-        effective_sensitivity_mode = (
-            sensitivity_mode and self._specs[model_name].sliced_fallback
-        )
+        effective_sensitivity_mode = sensitivity_mode and self._specs[model_name].sliced_fallback
         with self._inference_locks[model_name]:
             started = time.perf_counter()
             raw_detections = model.predict(

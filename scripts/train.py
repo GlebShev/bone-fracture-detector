@@ -21,9 +21,7 @@ class TrainingProfile:
 
 PROFILES = {
     "fast": TrainingProfile("yolo11n.pt", image_size=640, epochs=35, batch=16, patience=8),
-    "accurate": TrainingProfile(
-        "yolo11s.pt", image_size=768, epochs=50, batch=8, patience=10
-    ),
+    "accurate": TrainingProfile("yolo11s.pt", image_size=768, epochs=50, batch=8, patience=10),
 }
 
 

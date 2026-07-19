@@ -94,9 +94,7 @@ def draw_labels(label_path: Path, image: Image.Image, names: list[str]) -> Image
             continue
         class_value, x_center, y_center, width, height = line.split()
         class_id = int(class_value)
-        x_center, y_center, width, height = map(
-            float, (x_center, y_center, width, height)
-        )
+        x_center, y_center, width, height = map(float, (x_center, y_center, width, height))
         box = (
             (x_center - width / 2) * image.width,
             (y_center - height / 2) * image.height,

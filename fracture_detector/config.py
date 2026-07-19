@@ -28,9 +28,7 @@ class Settings:
     def from_env(cls) -> Settings:
         model_dir = Path(os.getenv("MODEL_DIR", str(PROJECT_ROOT / "models")))
         fast_path = Path(os.getenv("FAST_MODEL_PATH", str(model_dir / "fast.pt")))
-        accurate_path = Path(
-            os.getenv("ACCURATE_MODEL_PATH", str(model_dir / "accurate.pt"))
-        )
+        accurate_path = Path(os.getenv("ACCURATE_MODEL_PATH", str(model_dir / "accurate.pt")))
         origins = tuple(
             origin.strip()
             for origin in os.getenv("CORS_ORIGINS", "http://localhost:8501").split(",")
@@ -50,7 +48,7 @@ class Settings:
                 ModelSpec(
                     id="accurate",
                     title="Accurate",
-                    description="YOLO11s, 768 px: выше детализация, больше задержка.",
+                    description="YOLO11s, 768 px: крупнее и медленнее.",
                     weights_path=accurate_path,
                     image_size=768,
                 ),

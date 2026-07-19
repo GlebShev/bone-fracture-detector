@@ -30,10 +30,7 @@ def create_app(
 
     app = FastAPI(
         title="Bone Fracture Detection API",
-        description=(
-            "Учебный API локализации возможных переломов. "
-            "Результаты не являются медицинским заключением."
-        ),
+        description="API локализации переломов на рентгеновских снимках.",
         version="1.0.0",
     )
     app.add_middleware(

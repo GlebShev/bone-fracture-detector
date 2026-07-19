@@ -1,9 +1,7 @@
-# Generated reports
+# Результаты экспериментов
 
-These artifacts are created by the reproducible pipeline and should be committed after training:
+- `data_audit.json` — размеры split, распределение объектов и результат проверки данных;
+- `metrics.csv`, `metrics.json` — итоговые метрики Fast и Accurate;
+- `figures/` — примеры разметки, PR-кривые и предсказания на test split.
 
-- `data_audit.json` — dataset integrity and distribution;
-- `metrics.json` and `metrics.csv` — final Fast/Accurate test metrics;
-- selected training curves, confusion matrices, PR curves and error examples.
-
-No placeholder metric values are committed as if they were experimental results.
+Файлы формируются скриптами `audit_dataset.py`, `create_eda_figures.py` и `evaluate.py`.

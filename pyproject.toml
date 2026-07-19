@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bone-fracture-detector"
 version = "1.0.0"
-description = "FastAPI + Streamlit service for educational X-ray fracture detection"
+description = "FastAPI and Streamlit service for X-ray fracture detection"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

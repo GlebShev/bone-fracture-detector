@@ -33,9 +33,7 @@ def main() -> None:
         str(environment_kaggle) if environment_kaggle.is_file() else shutil.which("kaggle")
     )
     if kaggle_command is None:
-        raise SystemExit(
-            "Kaggle CLI is missing. Install requirements-ml.txt and run again."
-        )
+        raise SystemExit("Kaggle CLI is missing. Install requirements-ml.txt and run again.")
 
     source_yaml_files = [
         path for path in sorted(target.rglob("data.yaml")) if path != canonical_yaml

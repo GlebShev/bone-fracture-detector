@@ -7,7 +7,7 @@ from typing import Any
 
 import requests
 import streamlit as st
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from streamlit.errors import StreamlitSecretNotFoundError
 
 st.set_page_config(
@@ -51,7 +51,7 @@ def show_error(response: requests.Response) -> None:
 api_url = get_api_url()
 
 st.title("Детекция переломов на рентгеновских снимках")
-st.caption("Учебный проект. Результат модели не является диагнозом и не заменяет врача.")
+st.caption("Загрузите снимок, выберите модель и порог уверенности.")
 
 try:
     with st.spinner("Подключаемся к backend…"):
@@ -67,7 +67,7 @@ except requests.RequestException:
         {
             "id": "accurate",
             "title": "Accurate",
-            "description": "Более точная модель",
+            "description": "YOLO11s, 768 px",
             "available": False,
         },
     ]
@@ -92,19 +92,20 @@ with st.sidebar:
         max_value=0.95,
         value=0.25,
         step=0.05,
-        help="Понижение порога увеличивает число находок и риск false positive.",
+        help="Чем ниже порог, тем больше детекций.",
     )
     sensitivity_mode = st.checkbox(
         "Повышенная чувствительность",
-        value=True,
+        value=model_name == "fast",
         disabled=model_name != "fast",
+        key=f"sensitivity_mode_{model_name}",
         help=(
             "Если обычный Fast-проход пуст, модель проверяет два перекрывающихся "
-            "фрагмента. Это уменьшает число пропусков, но увеличивает риск false positive."
+            "фрагмента. Режим повышает recall и число false positive."
         ),
     )
     if sensitivity_mode and model_name == "fast":
-        st.caption("Второй проход может работать заметно дольше и чаще ошибаться.")
+        st.caption("При пустом результате запускаются два дополнительных прохода.")
     st.divider()
     st.markdown(f"Backend: `{api_url}`")
 
@@ -115,13 +116,18 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
     image_bytes = uploaded_file.getvalue()
-    source_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    try:
+        with Image.open(io.BytesIO(image_bytes)) as opened_image:
+            source_image = opened_image.convert("RGB")
+    except (OSError, UnidentifiedImageError):
+        st.error("Не удалось открыть изображение.")
+        st.stop()
     source_column, result_column = st.columns(2)
     with source_column:
         st.subheader("Исходное изображение")
         st.image(source_image, use_container_width=True)
 
-    if st.button("Найти возможный перелом", type="primary", use_container_width=True):
+    if st.button("Запустить детекцию", type="primary", use_container_width=True):
         with st.spinner("Модель анализирует снимок…"):
             try:
                 response = requests.post(
@@ -174,8 +180,8 @@ if uploaded_file is not None:
                         st.dataframe(rows, use_container_width=True, hide_index=True)
                     else:
                         st.info(
-                            "При выбранном пороге модель ничего не обнаружила. "
-                            "Это не исключает перелом; можно осторожно снизить confidence."
+                            "При выбранном пороге детекций нет. Попробуйте снизить "
+                            "confidence или включить повышенную чувствительность."
                         )
 else:
     st.info("Поддерживаются изображения JPEG, PNG и WEBP размером до 10 МБ.")

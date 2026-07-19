@@ -60,9 +60,7 @@ class UltralyticsDetector:
     ) -> list[RawDetection]:
         fallback_enabled = self._sliced_fallback and sensitivity_mode
         initial_confidence = (
-            min(confidence, SLICED_FALLBACK_SUPPORT_CONFIDENCE)
-            if fallback_enabled
-            else confidence
+            min(confidence, SLICED_FALLBACK_SUPPORT_CONFIDENCE) if fallback_enabled else confidence
         )
         candidates = self._predict_images([image], initial_confidence)[0]
         detections = [item for item in candidates if item.confidence >= confidence]
@@ -162,9 +160,7 @@ def detections_from_result(result: object) -> list[RawDetection]:
     ):
         class_id = int(class_value)
         class_name = (
-            str(names.get(class_id, class_id))
-            if isinstance(names, dict)
-            else str(names[class_id])
+            str(names.get(class_id, class_id)) if isinstance(names, dict) else str(names[class_id])
         )
         detections.append(
             RawDetection(
@@ -217,8 +213,7 @@ def non_max_suppression(
     kept: list[RawDetection] = []
     for detection in sorted(detections, key=lambda item: item.confidence, reverse=True):
         overlaps_existing = any(
-            detection.class_id == other.class_id
-            and bbox_iou(detection, other) >= iou_threshold
+            detection.class_id == other.class_id and bbox_iou(detection, other) >= iou_threshold
             for other in kept
         )
         if not overlaps_existing:

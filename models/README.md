@@ -1,10 +1,10 @@
-# Model weights
+# Веса моделей
 
-Final Colab artifacts are committed using these exact names:
+Приложение загружает два файла:
 
 - `fast.pt` — YOLO11n, 640 px;
 - `accurate.pt` — YOLO11s, 768 px.
 
-Both files are fine-tuned one-class (`fracture`) checkpoints, not renamed generic COCO
-weights. Their reproducible test metrics are stored in `reports/metrics.json` and
-`reports/metrics.csv`.
+Это веса после fine-tuning на одноклассовой разметке `fracture`, а не исходные COCO
+checkpoints. Параметры обучения описаны в ноутбуке, результаты test split — в
+`reports/metrics.csv` и `reports/metrics.json`.

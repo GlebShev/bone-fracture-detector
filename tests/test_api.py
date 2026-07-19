@@ -33,7 +33,7 @@ def test_predict_returns_detection_and_annotated_png(
     assert body["model_name"] == "accurate"
     assert body["sensitivity_mode"] is False
     assert body["detection_count"] == 1
-    assert body["detections"][0]["class_name"] == "forearm fracture"
+    assert body["detections"][0]["class_name"] == "fracture"
     assert body["detections"][0]["confidence"] == 0.91
 
     annotated = Image.open(io.BytesIO(base64.b64decode(body["annotated_image_base64"])))
@@ -41,9 +41,7 @@ def test_predict_returns_detection_and_annotated_png(
     assert annotated.size == (80, 64)
 
 
-def test_high_threshold_can_return_empty_result(
-    client: TestClient, image_bytes: bytes
-) -> None:
+def test_high_threshold_can_return_empty_result(client: TestClient, image_bytes: bytes) -> None:
     response = client.post(
         "/predict",
         files={"file": ("xray.png", image_bytes, "image/png")},
@@ -78,9 +76,7 @@ def test_rejects_unknown_model(client: TestClient, image_bytes: bytes) -> None:
     assert response.status_code == 404
 
 
-def test_reports_missing_weights(
-    app_factory: Callable[..., FastAPI], image_bytes: bytes
-) -> None:
+def test_reports_missing_weights(app_factory: Callable[..., FastAPI], image_bytes: bytes) -> None:
     client = TestClient(app_factory(weights_exist=False))
     assert client.get("/health").json()["ready"] is False
     response = client.post(

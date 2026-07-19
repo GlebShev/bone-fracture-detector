@@ -62,9 +62,7 @@ def resolve_sources(root: Path, value: str | list[str]) -> list[Path]:
         elif candidate.is_dir():
             paths.extend(
                 sorted(
-                    path
-                    for path in candidate.rglob("*")
-                    if path.suffix.lower() in IMAGE_SUFFIXES
+                    path for path in candidate.rglob("*") if path.suffix.lower() in IMAGE_SUFFIXES
                 )
             )
         elif candidate.suffix.lower() in IMAGE_SUFFIXES:
@@ -180,8 +178,7 @@ def main() -> None:
             "images": len(images),
             "objects": sum(class_counts.values()),
             "class_counts": {
-                names[class_id]: class_counts.get(class_id, 0)
-                for class_id in range(len(names))
+                names[class_id]: class_counts.get(class_id, 0) for class_id in range(len(names))
             },
             "objects_per_image": dict(sorted(objects_per_image.items())),
             "missing_labels": missing_labels,

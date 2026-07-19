@@ -26,8 +26,8 @@ class FakeDetector:
             return []
         return [
             RawDetection(
-                class_id=2,
-                class_name="forearm fracture",
+                class_id=0,
+                class_name="fracture",
                 confidence=0.91,
                 bbox=(10.0, 12.0, 50.0, 55.0),
             )

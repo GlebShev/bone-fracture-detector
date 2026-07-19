@@ -1,62 +1,162 @@
-# Bone Fracture Detection Service
+# Детекция переломов на рентгеновских снимках
 
-Учебный end-to-end проект детекции переломов на рентгеновских снимках:
+Сервис принимает рентгеновский снимок, запускает выбранную YOLO-модель и возвращает
+координаты найденных областей вместе с размеченным изображением.
+
+- [Приложение](https://jcvh3mrbarmvekrnoybn6d.streamlit.app/)
+- [Swagger API](https://bone-fracture-detector-xpw8.onrender.com/docs)
+- [Отчёт по экспериментам](docs/project_report.md)
+
+Backend работает на бесплатном инстансе Render. После простоя первый запрос может занять
+до минуты, а обработка снимка на CPU — ещё несколько десятков секунд.
+
+## Возможности
+
+- загрузка JPEG, PNG и WEBP до 10 МБ;
+- выбор между YOLO11n/640 и YOLO11s/768;
+- настройка confidence threshold;
+- дополнительный режим повышенной чувствительности для Fast-модели;
+- bounding boxes, confidence и время обработки в интерфейсе;
+- отдельный FastAPI backend с документацией OpenAPI.
 
 ```text
-Streamlit frontend → FastAPI backend → Fast / Accurate YOLO model
+Streamlit → POST /predict → FastAPI → ModelManager → YOLO
+                                      ↓
+                       JSON + размеченный PNG
 ```
 
-Пользователь загружает снимок, выбирает одну из двух моделей и порог уверенности,
-после чего получает размеченное изображение, список bounding boxes, confidence и время
-инференса.
+## Модели и результаты
 
-> **Важно:** приложение является учебной демонстрацией. Оно не предназначено для
-> медицинской диагностики и не заменяет заключение врача-рентгенолога.
+Обе модели обучены на одной и той же одноклассовой выборке. Fast использует YOLO11n и
+вход 640 px, Accurate — YOLO11s и 768 px. Идея второго профиля состояла в том, чтобы
+проверить влияние размера сети и разрешения на небольшие области.
 
-## Публичная демонстрация
+| Профиль | mAP@0.5 | mAP@0.5:0.95 | Precision | Recall | CPU, мс | Вес |
+|---|---:|---:|---:|---:|---:|---:|
+| Fast | 0.154 | 0.043 | 0.298 | 0.198 | 111.1 | 5.19 МБ |
+| Accurate | 0.149 | 0.041 | 0.260 | 0.187 | 338.7 | 18.27 МБ |
 
-- **Приложение:** <https://jcvh3mrbarmvekrnoybn6d.streamlit.app/>
-- **Backend healthcheck:** <https://bone-fracture-detector-xpw8.onrender.com/health>
-- **Swagger API:** <https://bone-fracture-detector-xpw8.onrender.com/docs>
+Увеличение модели не улучшило метрики: на test split Fast оказался немного точнее и
+примерно втрое быстрее. Порог `mAP@0.5 = 0.5` из ТЗ не достигнут, поэтому модельная часть
+соответствует 1 баллу из 4.
 
-Backend размещён на бесплатном Render и засыпает при бездействии. Первый запрос после
-паузы может запускаться 50 секунд или дольше. На выделенных `0.1 CPU` наблюдавшееся время
-инференса менялось примерно от 15 до 49 с для Fast и от 45 до 97 с для Accurate. Frontend
-учитывает холодный старт и ждёт ответ inference до 300 секунд.
+### Повышенная чувствительность
 
-## Соответствие критериям проекта
+Если обычный Fast-проход не находит объектов, сервис делит снимок на две перекрывающиеся
+полосы и запускает модель повторно. Результат принимается при confidence от `0.28` и только
+при наличии пересекающегося слабого сигнала на исходном изображении.
 
-| Критерий | Реализация |
-|---|---|
-| Тюнинг модели | Два обученных профиля, консервативные X-ray аугментации и честная test-оценка `mAP@0.5` |
-| Backend, 3 балла | FastAPI: `GET /health`, `GET /models`, `POST /predict`, Swagger `/docs`, валидация и HTTP-ошибки |
-| Frontend, 2 балла | Streamlit: загрузка снимка, результат, таблица детекций, latency, обработка ошибок |
-| Выбор двух моделей, 4 балла | Fast (YOLO11n/640) и Accurate (YOLO11s/768) |
-| GitHub, 1 балл | Репозиторий с CI, воспроизводимым обучением, тестами и документацией |
-| Видеопрезентация, 2 балла | Готовый сценарий в [`docs/presentation_script.md`](docs/presentation_script.md) |
-| Деплой, 4 балла | Docker/Render для API и Streamlit Community Cloud для UI |
+На test split при пороге `0.25` этот режим изменил показатели следующим образом:
 
-Максимальная оценка за модельную часть по выданному ТЗ достигается при
-**`mAP@0.5 ≥ 0.5`**. На отложенном test-наборе порог не достигнут: Fast получил `0.154`,
-Accurate — `0.149`. Поэтому по текущему результату модельная часть соответствует 1 баллу,
-а не 4. Значения получены `scripts/evaluate.py` и не корректировались вручную.
+| Режим | Precision | Recall | F1 |
+|---|---:|---:|---:|
+| Обычный | 0.344 | 0.115 | 0.172 |
+| Повышенная чувствительность | 0.342 | 0.146 | 0.204 |
 
 ## Данные
 
-Используется публичный Kaggle-датасет
+Используется Kaggle-датасет
 [Bone Fracture Detection: Computer Vision Project](https://www.kaggle.com/datasets/pkdarabi/bone-fracture-detection-computer-vision-project)
-(CC BY 4.0, DOI `10.13140/RG.2.2.14400.34569`). Исходная разметка содержит семь
-анатомических классов:
+(CC BY 4.0). В исходной разметке семь анатомических классов. Из-за сильного дисбаланса
+все области объединены в один класс `fracture`; координаты разметки при этом сохранены.
 
-1. Elbow Positive
-2. Fingers Positive
-3. Forearm Fracture
-4. Humerus
-5. Humerus Fracture
-6. Shoulder Fracture
-7. Wrist Positive
+| Split | Изображения | Объекты | Без объектов |
+|---|---:|---:|---:|
+| Train | 3 631 | 2 088 | 1 827 |
+| Validation | 348 | 204 | 175 |
+| Test | 169 | 96 | 86 |
 
-Данные не включены в Git из-за размера. Для локальной загрузки:
+Сегментационные полигоны исходного архива преобразуются в минимальные axis-aligned
+bounding boxes скриптом `prepare_detection_dataset.py`. Аудит дополнительно проверяет
+изображения, координаты, ID классов и дубликаты между split.
+
+![Примеры разметки](reports/figures/annotation_examples.jpg)
+
+## Структура репозитория
+
+```text
+backend/             FastAPI endpoints
+frontend/            интерфейс Streamlit
+fracture_detector/   инференс, модели, схемы и обработка изображений
+notebooks/           обучение и оценка в Google Colab
+scripts/             подготовка данных, аудит, обучение и evaluation
+models/              веса Fast и Accurate
+reports/             метрики, аудит и графики
+docs/                отчёт и план видеопрезентации
+tests/               тесты API и служебных модулей
+```
+
+Датасет и промежуточные training runs не хранятся в Git. Финальные веса и результаты
+оценки находятся в `models/` и `reports/`.
+
+## Локальный запуск
+
+Проект рассчитан на Python 3.10–3.12.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-ml.txt
+```
+
+Backend:
+
+```bash
+uvicorn backend.main:app --reload
+```
+
+Frontend запускается в другом терминале:
+
+```bash
+source .venv/bin/activate
+streamlit run frontend/app.py
+```
+
+После запуска доступны:
+
+- Streamlit: <http://localhost:8501>
+- Swagger: <http://localhost:8000/docs>
+- healthcheck: <http://localhost:8000/health>
+
+То же окружение можно поднять через Docker:
+
+```bash
+docker compose up --build
+```
+
+## API
+
+| Метод | Путь | Назначение |
+|---|---|---|
+| `GET` | `/health` | состояние сервиса и число доступных моделей |
+| `GET` | `/models` | список моделей и их параметры |
+| `POST` | `/predict` | инференс одного изображения |
+
+Поля `POST /predict`:
+
+- `file`: JPEG, PNG или WEBP;
+- `model_name`: `fast` или `accurate`;
+- `confidence`: число от `0.05` до `0.95`;
+- `sensitivity_mode`: второй проход Fast-модели.
+
+Пример запроса:
+
+```bash
+curl -X POST http://localhost:8000/predict \
+  -F file=@xray.jpg \
+  -F model_name=fast \
+  -F confidence=0.25 \
+  -F sensitivity_mode=true
+```
+
+## Подготовка данных и обучение
+
+Весь цикл собран в
+[`notebooks/01_colab_train_and_evaluate.ipynb`](notebooks/01_colab_train_and_evaluate.ipynb).
+В Colab нужно выбрать T4 GPU и выполнить ячейки сверху вниз. Результаты сохраняются в
+`MyDrive/bone-fracture-detector/`.
+
+Те же команды доступны отдельно:
 
 ```bash
 python scripts/download_dataset.py
@@ -67,142 +167,15 @@ python scripts/prepare_detection_dataset.py \
 python scripts/audit_dataset.py \
   --data data/bone-fracture-detect-one-class/data.yaml \
   --output reports/data_audit.json
+python scripts/train.py \
+  --data data/bone-fracture-detect-one-class/data.yaml \
+  --profile fast --device 0
+python scripts/evaluate.py \
+  --data data/bone-fracture-detect-one-class/data.yaml \
+  --split test --device 0
 ```
 
-Исходный архив версии 4 содержит сегментационные полигоны. Подготовительный скрипт
-преобразует каждый полигон в минимальный axis-aligned bounding box и сохраняет исходные
-файлы без изменений. Скрипт аудита проверяет читаемость изображений, YOLO-координаты, ID классов, пустые и
-отсутствующие labels, распределение объектов и совпадения изображений между split.
-
-![Примеры подготовленной разметки](reports/figures/annotation_examples.jpg)
-
-![Распределение классов](reports/figures/class_distribution.png)
-
-## Обучение в Google Colab
-
-Локальная машина без CUDA нужна только для разработки приложения. Обе модели обучаются
-в готовом ноутбуке
-[`notebooks/01_colab_train_and_evaluate.ipynb`](notebooks/01_colab_train_and_evaluate.ipynb).
-
-1. Откройте ноутбук в Colab.
-2. Выберите `Runtime → Change runtime type → T4 GPU`.
-3. Выполняйте ячейки сверху вниз.
-4. Разрешите доступ к Google Drive.
-5. После завершения возьмите из `MyDrive/bone-fracture-detector/`:
-   - `models/fast.pt`;
-   - `models/accurate.pt`;
-   - `metrics.csv` и `metrics.json`;
-   - `data_audit.json`;
-   - графики из `runs/`.
-6. Положите веса в локальную папку `models/`, а метрики — в `reports/`.
-
-Ноутбук скачивает датасет через официальный Kaggle CLI. Для публичного датасета токен
-обычно не требуется. Если Kaggle запросит авторизацию, добавьте в Colab secret
-`KAGGLE_API_TOKEN` из настроек Kaggle.
-
-### Профили обучения
-
-| Профиль | Checkpoint | `imgsz` | Эпохи | Batch | Назначение |
-|---|---|---:|---:|---:|---|
-| Fast | YOLO11n | 640 | 35 | 16 | небольшой вес и низкая CPU latency |
-| Accurate | YOLO11s | 768 | 50 | 8 | лучшее распознавание небольших областей |
-
-Для рентгенов отключены hue/saturation, vertical flip, mosaic и mixup. Оставлены только
-небольшие повороты, сдвиги, масштабирование, изменение яркости и horizontal flip.
-
-Финальная продуктовая постановка одноклассовая: сервис локализует любую область перелома
-как `fracture`. Это решение принято до обучения по результатам аудита: класс
-`humerus fracture` представлен только 3 объектами в train и отсутствует в validation/test.
-Переход сохраняет все исходные bounding boxes и меняет только идентификатор класса.
-
-### Финальные test-метрики
-
-| Model | mAP@0.5 | mAP@0.5:0.95 | Precision | Recall | CPU inference | Size |
-|---|---:|---:|---:|---:|---:|---:|
-| Fast | 0.154 | 0.043 | 0.298 | 0.198 | 111.1 ms | 5.19 MB |
-| Accurate | 0.149 | 0.041 | 0.260 | 0.187 | 338.7 ms | 18.27 MB |
-
-Fast оказался не только примерно втрое быстрее, но и немного лучше на отложенном test.
-Увеличение модели и входного разрешения не дало улучшения качества — это важный
-отрицательный результат тюнинга, вероятно связанный с малым числом размеченных объектов,
-неоднозначностью слабоконтрастных областей и domain shift внутри выборки.
-
-В Fast-режиме пользователь может включить опциональную **повышенную чувствительность**:
-если обычный проход пуст, модель повторно смотрит на две перекрывающиеся полосы снимка.
-Второй проход принимает только области с confidence от `0.28`, которые подтверждены хотя
-бы слабым пересекающимся сигналом на полном изображении. На validation при пороге `0.25`
-recall вырос `0.162 → 0.181`, F1 — `0.236 → 0.246`, но precision снизился `0.434 → 0.381`.
-На отложенном test фиксированный порог дал precision `0.344 → 0.342`, recall
-`0.115 → 0.146` и F1 `0.172 → 0.204`. Интерфейс всё равно явно предупреждает о риске
-false positive. Официальные test-метрики выше оставлены без изменения: они
-характеризуют веса без этой продуктовой эвристики.
-
-![Сравнение предсказаний Fast](reports/figures/fast_test_predictions.jpg)
-
-![Сравнение предсказаний Accurate](reports/figures/accurate_test_predictions.jpg)
-
-Те же операции доступны из CLI на GPU-машине:
-
-```bash
-python scripts/train.py --data /path/to/data.yaml --profile fast --device 0
-python scripts/train.py --data /path/to/data.yaml --profile accurate --device 0
-python scripts/evaluate.py --data /path/to/data.yaml --split test --device 0
-```
-
-## Локальный запуск приложения
-
-Требуется Python 3.10–3.12.
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements-ml.txt
-uvicorn backend.main:app --reload
-```
-
-Во втором терминале:
-
-```bash
-source .venv/bin/activate
-streamlit run frontend/app.py
-```
-
-Откройте:
-
-- UI: <http://localhost:8501>
-- Swagger: <http://localhost:8000/docs>
-- healthcheck: <http://localhost:8000/health>
-
-Без `models/fast.pt` и `models/accurate.pt` API запускается, но честно показывает модели
-как недоступные и возвращает `503` на запрос инференса.
-
-## API
-
-### `GET /health`
-
-```json
-{"status": "ok", "ready": true, "available_models": 2}
-```
-
-### `GET /models`
-
-Возвращает модели, описание режима, размер входа и признак доступности весов.
-
-### `POST /predict`
-
-`multipart/form-data`:
-
-- `file`: JPEG, PNG или WEBP до 10 МБ;
-- `model_name`: `fast` или `accurate`;
-- `confidence`: от `0.05` до `0.95`.
-- `sensitivity_mode`: включает второй sliced-проход Fast-модели; по умолчанию `true`.
-
-Ответ содержит координаты в пикселях и PNG с отрисованными областями в base64.
-
-## Тесты
-
-API тестируется без PyTorch на детерминированном fake detector; это проверяет весь контракт,
-валидацию, выбор модели и формирование изображения, не маскируя отсутствие обученных весов.
+## Проверка кода
 
 ```bash
 pip install -r requirements-dev.txt
@@ -210,55 +183,16 @@ ruff check .
 pytest --cov=fracture_detector --cov=backend
 ```
 
+CI запускает эти проверки при каждом push и pull request.
+
 ## Деплой
 
-### Backend на Render
-
-1. Убедитесь, что два fine-tuned `.pt` находятся в `models/`.
-2. Подключите GitHub-репозиторий в Render или примените `render.yaml`.
-3. Исправьте `CORS_ORIGINS` на реальный адрес Streamlit.
-4. Проверьте `/health` и `/docs` после сборки Docker-образа.
-
-Dockerfile использует CPU-only PyTorch и отдельный `requirements-api.txt`: это исключает
-ненужные CUDA-библиотеки из образа бесплатного CPU-сервера Render.
-
-Текущий публичный сервис: <https://bone-fracture-detector-xpw8.onrender.com>.
-
-### Frontend на Streamlit Community Cloud
-
-1. Создайте приложение из этого GitHub-репозитория.
-2. Entry point: `frontend/app.py`.
-3. В Secrets добавьте:
+Render использует `Dockerfile` и настройки из `render.yaml`. Для Streamlit Community Cloud
+entrypoint — `frontend/app.py`; адрес backend задаётся в secrets:
 
 ```toml
-API_URL = "https://YOUR-RENDER-SERVICE.onrender.com"
+API_URL = "https://bone-fracture-detector-xpw8.onrender.com"
 ```
 
-4. Проверьте Fast и Accurate на одном и том же снимке в режиме инкогнито.
-
-Текущее публичное приложение: <https://jcvh3mrbarmvekrnoybn6d.streamlit.app/>.
-
-Для локальной проверки контейнеров можно использовать `docker compose up --build`.
-
-## Структура
-
-```text
-backend/                  FastAPI entrypoint
-frontend/                 Streamlit UI
-fracture_detector/        inference, model registry, image processing, schemas
-scripts/                  download, audit, train, evaluate
-notebooks/                self-contained Colab workflow
-models/                   final Fast/Accurate weights
-reports/                  generated audit and real metrics
-docs/                     report and video script
-tests/                    API and image validation tests
-```
-
-## Ограничения
-
-- датасет не содержит достаточной клинической информации для медицинского применения;
-- возможны false positive и false negative;
-- качество на снимках из другой клиники может снизиться из-за domain shift;
-- `confidence` не является вероятностью диагноза;
-- test split используется только один раз для финальной таблицы, а решения по тюнингу
-  принимаются по validation split.
+Сценарий для записи итогового видео находится в
+[`docs/presentation_script.md`](docs/presentation_script.md).
