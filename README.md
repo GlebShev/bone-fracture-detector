@@ -197,6 +197,9 @@ pytest --cov=fracture_detector --cov=backend
 3. Исправьте `CORS_ORIGINS` на реальный адрес Streamlit.
 4. Проверьте `/health` и `/docs` после сборки Docker-образа.
 
+Dockerfile использует CPU-only PyTorch и отдельный `requirements-api.txt`: это исключает
+ненужные CUDA-библиотеки из образа бесплатного CPU-сервера Render.
+
 ### Frontend на Streamlit Community Cloud
 
 1. Создайте приложение из этого GitHub-репозитория.

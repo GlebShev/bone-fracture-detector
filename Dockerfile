@@ -6,8 +6,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY requirements.txt requirements-ml.txt ./
-RUN pip install --no-cache-dir -r requirements-ml.txt
+COPY requirements-api.txt ./
+
+# Render's free service is CPU-only. Installing PyTorch from its CPU index avoids
+# several gigabytes of unused CUDA libraries and keeps the image deployable.
+RUN pip install --no-cache-dir \
+    --index-url https://download.pytorch.org/whl/cpu \
+    torch==2.2.2 torchvision==0.17.2
+RUN pip install --no-cache-dir -r requirements-api.txt
 
 COPY fracture_detector ./fracture_detector
 COPY backend ./backend
